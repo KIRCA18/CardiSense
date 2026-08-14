@@ -1,0 +1,16 @@
+fairseq-core/
+fairseq-signals/
+
+# ignore checkpoints
+*.pt
+ckpts/
+
+
+#ignore envs
+.venv/
+env/
+venv/
+
+
+#ignore env vars
+.env
