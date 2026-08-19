@@ -1,6 +1,6 @@
-package mk.ukim.finki.backend.Service;
+package mk.ukim.finki.backend.service.interfaces;
 
-import mk.ukim.finki.backend.Domain.ParsedEcg;
+import mk.ukim.finki.backend.domain.model.ParsedEcg;
 
 public interface EcgArchiveParser {
 
