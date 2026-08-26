@@ -1,6 +1,9 @@
 package mk.ukim.finki.backend.domain.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.List;
@@ -8,12 +11,14 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "ecg_records")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class EcgRecord {
 
     @Id
     @GeneratedValue
     private UUID id;
-
 
     @Column(nullable = false)
     private String originalFormat;
@@ -51,10 +56,6 @@ public class EcgRecord {
     @Column(nullable = false)
     private Instant uploadedAt = Instant.now();
 
-    protected EcgRecord() {
-        // JPA
-    }
-
     public EcgRecord(String originalFormat, String storageUri, String waveformUri,
                       List<String> leadNames, List<String> units, int sampleCount,
                       double samplingRateHz, double durationSeconds, String checksumSha256) {
@@ -67,49 +68,5 @@ public class EcgRecord {
         this.samplingRateHz = samplingRateHz;
         this.durationSeconds = durationSeconds;
         this.checksumSha256 = checksumSha256;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public String getOriginalFormat() {
-        return originalFormat;
-    }
-
-    public String getStorageUri() {
-        return storageUri;
-    }
-
-    public String getWaveformUri() {
-        return waveformUri;
-    }
-
-    public List<String> getLeadNames() {
-        return leadNames;
-    }
-
-    public List<String> getUnits() {
-        return units;
-    }
-
-    public int getSampleCount() {
-        return sampleCount;
-    }
-
-    public double getSamplingRateHz() {
-        return samplingRateHz;
-    }
-
-    public double getDurationSeconds() {
-        return durationSeconds;
-    }
-
-    public String getChecksumSha256() {
-        return checksumSha256;
-    }
-
-    public Instant getUploadedAt() {
-        return uploadedAt;
     }
 }

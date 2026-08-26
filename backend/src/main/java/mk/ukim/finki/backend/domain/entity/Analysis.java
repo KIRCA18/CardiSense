@@ -1,6 +1,9 @@
 package mk.ukim.finki.backend.domain.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -9,6 +12,9 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "analyses")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Analysis {
 
     @Id
@@ -71,10 +77,6 @@ public class Analysis {
         PENDING, RUNNING, COMPLETED, FAILED
     }
 
-    protected Analysis() {
-        // JPA
-    }
-
     public Analysis(EcgRecord ecgRecord, MlModel model, User requestedBy, String deviceUsed,
                      String checkpointUsed, int inputLeadCount, int inputSampleCount,
                      double inputSamplingRateHz, double inputDurationSeconds,
@@ -90,93 +92,5 @@ public class Analysis {
         this.inputDurationSeconds = inputDurationSeconds;
         this.resampledSampleCount = resampledSampleCount;
         this.segmentsProcessed = segmentsProcessed;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public EcgRecord getEcgRecord() {
-        return ecgRecord;
-    }
-
-    public MlModel getModel() {
-        return model;
-    }
-
-    public User getRequestedBy() {
-        return requestedBy;
-    }
-
-    public String getDeviceUsed() {
-        return deviceUsed;
-    }
-
-    public String getCheckpointUsed() {
-        return checkpointUsed;
-    }
-
-    public int getInputLeadCount() {
-        return inputLeadCount;
-    }
-
-    public int getInputSampleCount() {
-        return inputSampleCount;
-    }
-
-    public double getInputSamplingRateHz() {
-        return inputSamplingRateHz;
-    }
-
-    public double getInputDurationSeconds() {
-        return inputDurationSeconds;
-    }
-
-    public int getResampledSampleCount() {
-        return resampledSampleCount;
-    }
-
-    public int getSegmentsProcessed() {
-        return segmentsProcessed;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public Instant getStartedAt() {
-        return startedAt;
-    }
-
-    public void setStartedAt(Instant startedAt) {
-        this.startedAt = startedAt;
-    }
-
-    public Instant getCompletedAt() {
-        return completedAt;
-    }
-
-    public void setCompletedAt(Instant completedAt) {
-        this.completedAt = completedAt;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
-
-    public List<Prediction> getPredictions() {
-        return predictions;
-    }
-
-    public List<AnalysisWarning> getWarnings() {
-        return warnings;
     }
 }

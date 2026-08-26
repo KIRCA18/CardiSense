@@ -1,11 +1,17 @@
 package mk.ukim.finki.backend.domain.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Entity
 @Table(name = "ml_models")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class MlModel {
 
     @Id
@@ -30,10 +36,6 @@ public class MlModel {
     @Column(nullable = false)
     private boolean active = true;
 
-    protected MlModel() {
-        // JPA
-    }
-
     public MlModel(String modelKey, String name, String checkpoint, String version, String inputAdapter) {
         this.modelKey = modelKey;
         this.name = name;
@@ -42,35 +44,4 @@ public class MlModel {
         this.inputAdapter = inputAdapter;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
-    public String getModelKey() {
-        return modelKey;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getCheckpoint() {
-        return checkpoint;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public String getInputAdapter() {
-        return inputAdapter;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
 }

@@ -1,12 +1,18 @@
 package mk.ukim.finki.backend.domain.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(name = "ecg_record_ownership")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class EcgRecordOwnership {
 
     @Id
@@ -24,28 +30,8 @@ public class EcgRecordOwnership {
     @Column(nullable = false)
     private Instant linkedAt = Instant.now();
 
-    protected EcgRecordOwnership() {
-        // JPA
-    }
-
     public EcgRecordOwnership(EcgRecord ecgRecord, User user) {
         this.ecgRecord = ecgRecord;
         this.user = user;
-    }
-
-    public UUID getEcgRecordId() {
-        return ecgRecordId;
-    }
-
-    public EcgRecord getEcgRecord() {
-        return ecgRecord;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public Instant getLinkedAt() {
-        return linkedAt;
     }
 }

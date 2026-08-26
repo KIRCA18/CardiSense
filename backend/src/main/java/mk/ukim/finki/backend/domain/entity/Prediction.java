@@ -1,11 +1,17 @@
 package mk.ukim.finki.backend.domain.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Entity
 @Table(name = "predictions")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Prediction {
 
     @Id
@@ -25,10 +31,6 @@ public class Prediction {
     @Column(nullable = false)
     private String aggregation;
 
-    protected Prediction() {
-        // JPA
-    }
-
     public Prediction(Analysis analysis, String label, double score, String aggregation) {
         this.analysis = analysis;
         this.label = label;
@@ -36,23 +38,4 @@ public class Prediction {
         this.aggregation = aggregation;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
-    public Analysis getAnalysis() {
-        return analysis;
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
-    public double getScore() {
-        return score;
-    }
-
-    public String getAggregation() {
-        return aggregation;
-    }
 }

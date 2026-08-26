@@ -1,11 +1,17 @@
 package mk.ukim.finki.backend.domain.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Entity
 @Table(name = "analysis_warnings")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class AnalysisWarning {
 
     @Id
@@ -19,24 +25,8 @@ public class AnalysisWarning {
     @Column(nullable = false)
     private String message;
 
-    protected AnalysisWarning() {
-        // JPA
-    }
-
     public AnalysisWarning(Analysis analysis, String message) {
         this.analysis = analysis;
         this.message = message;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public Analysis getAnalysis() {
-        return analysis;
-    }
-
-    public String getMessage() {
-        return message;
     }
 }
