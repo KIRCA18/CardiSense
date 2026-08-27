@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/analyses")
+@RequestMapping("/analyses")
 public class AnalysisController {
 
     private final EcgUploadMapper uploadMapper;
