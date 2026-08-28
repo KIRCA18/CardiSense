@@ -4,8 +4,15 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import mk.ukim.finki.backend.domain.enums.Role;
+import org.jspecify.annotations.Nullable;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -13,7 +20,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue
@@ -25,15 +32,52 @@ public class User {
     @Column(nullable = false)
     private String passwordHash;
 
-    private String fullName;
+    private String firstName;
+
+    private String lastName;
 
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 
-    public User(String email, String passwordHash, String fullName) {
+    private boolean enabled = false;
+
+    @Enumerated(value = EnumType.STRING)
+    private Role role = Role.ROLE_RESEARCHER;
+
+    public User(String email, String passwordHash, String firstName, String lastName) {
         this.email = email;
         this.passwordHash = passwordHash;
-        this.fullName = fullName;
+        this.firstName = firstName;
+        this.lastName = lastName;
     }
 
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.singletonList(role);
+    }
+
+    @Override
+    public @Nullable String getPassword() {
+        return this.passwordHash;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
 }

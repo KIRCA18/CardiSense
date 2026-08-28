@@ -1,0 +1,10 @@
+package mk.ukim.finki.backend.domain.dto;
+
+import java.util.UUID;
+
+public record UserResponse (
+        UUID id,
+        String email,
+        String firstName,
+        String lastName
+) {}
