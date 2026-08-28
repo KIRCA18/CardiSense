@@ -2,7 +2,7 @@ package mk.ukim.finki.backend.service.implementation;
 
 import lombok.RequiredArgsConstructor;
 import mk.ukim.finki.backend.service.interfaces.UserService;
-import mk.ukim.finki.backend.domain.dto.CreateUserRequest;
+import mk.ukim.finki.backend.web.request.CreateUserRequest;
 import mk.ukim.finki.backend.domain.entity.User;
 import mk.ukim.finki.backend.domain.exception.EmailAlreadyInUseException;
 import mk.ukim.finki.backend.repository.UserRepository;

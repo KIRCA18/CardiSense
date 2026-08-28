@@ -1,6 +1,6 @@
-package mk.ukim.finki.backend.service.mapper;
+package mk.ukim.finki.backend.web.mapper;
 
-import mk.ukim.finki.backend.domain.externalmodel.FastApiContracts;
+import mk.ukim.finki.backend.service.externalmodel.FastApiContracts;
 import mk.ukim.finki.backend.domain.model.AnalysisResult;
 import mk.ukim.finki.backend.domain.model.CommonEcg;
 import org.springframework.stereotype.Component;

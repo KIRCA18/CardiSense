@@ -1,15 +1,14 @@
 package mk.ukim.finki.backend.web.controller;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
-import mk.ukim.finki.backend.domain.dto.LogInRequest;
 import mk.ukim.finki.backend.service.interfaces.JwtService;
 import mk.ukim.finki.backend.service.interfaces.UserService;
-import mk.ukim.finki.backend.service.mapper.UserMapper;
-import mk.ukim.finki.backend.domain.dto.CreateUserRequest;
-import mk.ukim.finki.backend.domain.dto.UserResponse;
+import mk.ukim.finki.backend.web.mapper.UserMapper;
+import mk.ukim.finki.backend.domain.dto.UserDto;
 import mk.ukim.finki.backend.domain.entity.User;
+import mk.ukim.finki.backend.web.request.CreateUserRequest;
+import mk.ukim.finki.backend.web.request.LogInRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -25,13 +24,13 @@ public class AuthController {
     private final JwtService jwtService;
 
     @PostMapping("/sign-up")
-    public ResponseEntity<UserResponse> signUp(@Valid @RequestBody CreateUserRequest request) {
+    public ResponseEntity<UserDto> signUp(@Valid @RequestBody CreateUserRequest request) {
         User user = userService.signUp(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponse(user));
     }
 
     @PostMapping("/log-in")
-    public ResponseEntity<UserResponse> logIn(@Valid @RequestBody LogInRequest request) {
+    public ResponseEntity<UserDto> logIn(@Valid @RequestBody LogInRequest request) {
         User user = userService.logIn(request.email(), request.password());
 
         String token = jwtService.generateToken(user);

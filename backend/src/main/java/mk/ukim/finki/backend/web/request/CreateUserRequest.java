@@ -1,4 +1,4 @@
-package mk.ukim.finki.backend.domain.dto;
+package mk.ukim.finki.backend.web.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

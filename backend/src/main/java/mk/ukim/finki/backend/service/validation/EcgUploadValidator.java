@@ -1,6 +1,6 @@
 package mk.ukim.finki.backend.service.validation;
 
-import mk.ukim.finki.backend.domain.dto.AnalyzeEcgRequest;
+import mk.ukim.finki.backend.web.request.AnalyzeEcgRequest;
 import mk.ukim.finki.backend.domain.exception.InvalidEcgException;
 import org.springframework.stereotype.Component;
 

@@ -1,6 +1,6 @@
 package mk.ukim.finki.backend.service.implementation;
 
-import mk.ukim.finki.backend.domain.dto.AnalyzeEcgRequest;
+import mk.ukim.finki.backend.web.request.AnalyzeEcgRequest;
 import mk.ukim.finki.backend.domain.model.AnalysisResult;
 import mk.ukim.finki.backend.domain.model.CommonEcg;
 import mk.ukim.finki.backend.domain.model.ParsedEcg;

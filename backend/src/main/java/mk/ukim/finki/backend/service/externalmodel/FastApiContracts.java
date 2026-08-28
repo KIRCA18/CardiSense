@@ -1,4 +1,4 @@
-package mk.ukim.finki.backend.domain.externalmodel;
+package mk.ukim.finki.backend.service.externalmodel;
 
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.annotation.JsonNaming;

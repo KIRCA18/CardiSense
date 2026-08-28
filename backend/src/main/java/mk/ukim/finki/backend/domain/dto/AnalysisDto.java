@@ -2,7 +2,7 @@ package mk.ukim.finki.backend.domain.dto;
 
 import java.util.List;
 
-public record AnalysisResponse(
+public record AnalysisDto(
         ModelInfo model,
         String recordId,
         InputSummary input,
