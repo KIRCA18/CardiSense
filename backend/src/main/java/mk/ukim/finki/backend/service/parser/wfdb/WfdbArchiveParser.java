@@ -2,58 +2,93 @@ package mk.ukim.finki.backend.service.parser.wfdb;
 
 import mk.ukim.finki.backend.domain.exception.InvalidEcgException;
 import mk.ukim.finki.backend.domain.model.ParsedEcg;
+import mk.ukim.finki.backend.domain.model.ParsedEcgRecord;
+import mk.ukim.finki.backend.service.archive.ArchiveExtractionService;
 import mk.ukim.finki.backend.service.interfaces.EcgArchiveParser;
 import org.springframework.stereotype.Component;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import java.util.TreeMap;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipInputStream;
+import java.util.Set;
 
 @Component
 public class WfdbArchiveParser implements EcgArchiveParser {
 
-    private static final int MAX_ENTRIES = 10;
-    private static final int MAX_UNCOMPRESSED_BYTES = 10 * 1024 * 1024;
+    private static final int MAX_RECORDS = 50;
 
+    private final ArchiveExtractionService archiveExtractionService;
     private final WfdbHeaderParser headerParser;
     private final WfdbSignalDecoder signalDecoder;
 
     public WfdbArchiveParser(
+            ArchiveExtractionService archiveExtractionService,
             WfdbHeaderParser headerParser,
             WfdbSignalDecoder signalDecoder
     ) {
+        this.archiveExtractionService = archiveExtractionService;
         this.headerParser = headerParser;
         this.signalDecoder = signalDecoder;
     }
 
     @Override
-    public ParsedEcg parse(byte[] archive) {
-        Map<String, byte[]> files = readZip(archive);
+    public List<ParsedEcgRecord> parse(
+            String archiveFilename,
+            byte[] archive
+    ) {
+        Map<String, byte[]> files = archiveExtractionService.extract(
+                archiveFilename,
+                archive
+        );
 
         List<String> headerFiles = files.keySet().stream()
-                .filter(name -> name.toLowerCase().endsWith(".hea"))
+                .filter(name -> name.toLowerCase(Locale.ROOT).endsWith(".hea"))
                 .toList();
 
-        if (headerFiles.size() != 1) {
+        if (headerFiles.isEmpty()) {
             throw new InvalidEcgException(
-                    "ZIP must contain exactly one .hea file"
+                    "Dataset archive must contain at least one .hea file"
             );
         }
 
-        String headerFileName = headerFiles.get(0);
+        if (headerFiles.size() > MAX_RECORDS) {
+            throw new InvalidEcgException(
+                    "Dataset archive contains more than %d ECG records"
+                            .formatted(MAX_RECORDS)
+            );
+        }
+
+        Set<String> recordNames = new HashSet<>();
+
+        return headerFiles.stream()
+                .map(headerFileName -> parseRecord(
+                        headerFileName,
+                        files,
+                        recordNames
+                ))
+                .toList();
+    }
+
+    private ParsedEcgRecord parseRecord(
+            String headerFileName,
+            Map<String, byte[]> files,
+            Set<String> recordNames
+    ) {
         String headerText = new String(
                 files.get(headerFileName),
                 StandardCharsets.US_ASCII
         );
 
         WfdbHeader header = headerParser.parse(headerText);
+
+        if (!recordNames.add(header.recordName().toLowerCase(Locale.ROOT))) {
+            throw new InvalidEcgException(
+                    "Dataset archive contains duplicate WFDB record name: " +
+                            header.recordName()
+            );
+        }
 
         List<String> referencedFiles = header.signals().stream()
                 .map(WfdbSignalSpec::fileName)
@@ -75,109 +110,8 @@ public class WfdbArchiveParser implements EcgArchiveParser {
             );
         }
 
-        return signalDecoder.decode(header, signalFile);
+        ParsedEcg ecg = signalDecoder.decode(header, signalFile);
+        return new ParsedEcgRecord(header.recordName(), ecg);
     }
 
-    private Map<String, byte[]> readZip(byte[] archive) {
-        Map<String, byte[]> files =
-                new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-
-        int entryCount = 0;
-        int totalBytes = 0;
-
-        try (
-                ZipInputStream zip = new ZipInputStream(
-                        new ByteArrayInputStream(archive)
-                )
-        ) {
-            ZipEntry entry;
-
-            while ((entry = zip.getNextEntry()) != null) {
-                if (entry.isDirectory()) {
-                    continue;
-                }
-
-                entryCount++;
-                if (entryCount > MAX_ENTRIES) {
-                    throw new InvalidEcgException(
-                            "ZIP contains too many files"
-                    );
-                }
-
-                String name = validateEntryName(entry.getName());
-                String extension = extension(name);
-
-                if (!extension.equals("hea") && !extension.equals("mat")) {
-                    throw new InvalidEcgException(
-                            "Unsupported file in ZIP: " + name
-                    );
-                }
-
-                ByteArrayOutputStream output = new ByteArrayOutputStream();
-                byte[] buffer = new byte[8192];
-                int read;
-
-                while ((read = zip.read(buffer)) != -1) {
-                    totalBytes += read;
-
-                    if (totalBytes > MAX_UNCOMPRESSED_BYTES) {
-                        throw new InvalidEcgException(
-                                "Uncompressed ZIP contents exceed 10 MB"
-                        );
-                    }
-
-                    output.write(buffer, 0, read);
-                }
-
-                if (files.putIfAbsent(name, output.toByteArray()) != null) {
-                    throw new InvalidEcgException(
-                            "ZIP contains duplicate file: " + name
-                    );
-                }
-            }
-        } catch (ZipException exception) {
-            throw new InvalidEcgException(
-                    "Uploaded file is not a valid ZIP archive",
-                    exception
-            );
-        } catch (IOException exception) {
-            throw new InvalidEcgException(
-                    "Could not read ZIP archive",
-                    exception
-            );
-        }
-
-        if (files.isEmpty()) {
-            throw new InvalidEcgException("ZIP archive is empty");
-        }
-
-        return files;
-    }
-
-    private String validateEntryName(String name) {
-        String normalized = name.replace('\\', '/');
-
-        if (
-                normalized.startsWith("/") ||
-                        normalized.contains("/") ||
-                        normalized.equals(".") ||
-                        normalized.equals("..")
-        ) {
-            throw new InvalidEcgException(
-                    "ZIP files must be placed at the archive root: " + name
-            );
-        }
-
-        return normalized;
-    }
-
-    private String extension(String name) {
-        int separator = name.lastIndexOf('.');
-
-        if (separator < 0 || separator == name.length() - 1) {
-            return "";
-        }
-
-        return name.substring(separator + 1).toLowerCase();
-    }
 }

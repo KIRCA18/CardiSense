@@ -1,14 +1,16 @@
 package mk.ukim.finki.backend.service.implementation;
 
 import mk.ukim.finki.backend.web.request.AnalyzeEcgRequest;
-import mk.ukim.finki.backend.domain.model.AnalysisResult;
 import mk.ukim.finki.backend.domain.model.CommonEcg;
-import mk.ukim.finki.backend.domain.model.ParsedEcg;
+import mk.ukim.finki.backend.domain.model.DatasetAnalysisResult;
+import mk.ukim.finki.backend.domain.model.ParsedEcgRecord;
 import mk.ukim.finki.backend.service.interfaces.EcgAnalysisService;
 import mk.ukim.finki.backend.service.interfaces.EcgArchiveParser;
 import mk.ukim.finki.backend.service.interfaces.ModelInferenceService;
 import mk.ukim.finki.backend.service.validation.EcgUploadValidator;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class EcgAnalysisServiceImpl implements EcgAnalysisService {
@@ -31,12 +33,31 @@ public class EcgAnalysisServiceImpl implements EcgAnalysisService {
     }
 
     @Override
-    public AnalysisResult analyze(AnalyzeEcgRequest request) {
+    public DatasetAnalysisResult analyze(AnalyzeEcgRequest request) {
         uploadValidator.validate(request);
 
-        ParsedEcg parsed = archiveParser.parse(request.content());
-        CommonEcg anonymized = anonymizationService.anonymize(parsed);
+        List<ParsedEcgRecord> parsedRecords =
+                archiveParser.parse(
+                        request.originalFilename(),
+                        request.content()
+                );
 
-        return modelInferenceService.infer(request.modelId(), anonymized);
+        List<DatasetAnalysisResult.RecordAnalysis> analyses = parsedRecords.stream()
+                .map(record -> analyzeRecord(record, request.modelId()))
+                .toList();
+
+        return new DatasetAnalysisResult(analyses);
+    }
+
+    private DatasetAnalysisResult.RecordAnalysis analyzeRecord(
+            ParsedEcgRecord record,
+            String modelId
+    ) {
+        CommonEcg anonymized = anonymizationService.anonymize(record.ecg());
+
+        return new DatasetAnalysisResult.RecordAnalysis(
+                record.recordName(),
+                modelInferenceService.infer(modelId, anonymized)
+        );
     }
 }

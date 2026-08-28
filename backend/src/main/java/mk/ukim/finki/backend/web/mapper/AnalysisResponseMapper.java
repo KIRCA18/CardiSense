@@ -1,7 +1,9 @@
 package mk.ukim.finki.backend.web.mapper;
 
 import mk.ukim.finki.backend.domain.dto.AnalysisDto;
+import mk.ukim.finki.backend.domain.dto.DatasetAnalysisDto;
 import mk.ukim.finki.backend.domain.model.AnalysisResult;
+import mk.ukim.finki.backend.domain.model.DatasetAnalysisResult;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -9,7 +11,18 @@ import java.util.List;
 @Component
 public class AnalysisResponseMapper {
 
-    public AnalysisDto toResponse(AnalysisResult result) {
+    public DatasetAnalysisDto toResponse(DatasetAnalysisResult result) {
+        List<DatasetAnalysisDto.RecordAnalysisDto> records = result.records().stream()
+                .map(record -> new DatasetAnalysisDto.RecordAnalysisDto(
+                        record.recordName(),
+                        toAnalysisDto(record.analysis())
+                ))
+                .toList();
+
+        return new DatasetAnalysisDto(records.size(), records);
+    }
+
+    private AnalysisDto toAnalysisDto(AnalysisResult result) {
         AnalysisDto.ModelInfo model = new AnalysisDto.ModelInfo(
                 result.model().id(),
                 result.model().checkpoint(),

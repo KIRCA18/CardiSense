@@ -4,14 +4,23 @@ import mk.ukim.finki.backend.web.request.AnalyzeEcgRequest;
 import mk.ukim.finki.backend.domain.exception.InvalidEcgException;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
 @Component
 public class EcgUploadValidator {
 
-    private static final long MAX_ARCHIVE_BYTES = 10L * 1024 * 1024;
+    private static final long MAX_ARCHIVE_BYTES = 50L * 1024 * 1024;
     private static final Set<String> SUPPORTED_MODELS = Set.of("ecg-fm");
+    private static final List<String> SUPPORTED_ARCHIVE_SUFFIXES = List.of(
+            ".zip",
+            ".rar",
+            ".7z",
+            ".tar",
+            ".tar.gz",
+            ".tgz"
+    );
 
     public void validate(AnalyzeEcgRequest request) {
         if (request == null) {
@@ -31,7 +40,7 @@ public class EcgUploadValidator {
         }
 
         if (content.length > MAX_ARCHIVE_BYTES || request.declaredSize() > MAX_ARCHIVE_BYTES) {
-            throw new InvalidEcgException("Uploaded ECG archive exceeds 10 MB");
+            throw new InvalidEcgException("Uploaded ECG dataset archive exceeds 50 MB");
         }
     }
 
@@ -40,8 +49,15 @@ public class EcgUploadValidator {
             throw new InvalidEcgException("Uploaded ECG archive must have a filename");
         }
 
-        if (!filename.toLowerCase(Locale.ROOT).endsWith(".zip")) {
-            throw new InvalidEcgException("Uploaded ECG must be a ZIP archive");
+        String normalizedFilename = filename.toLowerCase(Locale.ROOT);
+        boolean supported = SUPPORTED_ARCHIVE_SUFFIXES.stream()
+                .anyMatch(normalizedFilename::endsWith);
+
+        if (!supported) {
+            throw new InvalidEcgException(
+                    "Uploaded ECG dataset must be a ZIP, RAR, 7z, TAR, " +
+                            "TAR.GZ, or TGZ archive"
+            );
         }
     }
 

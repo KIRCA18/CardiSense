@@ -27,6 +27,7 @@ function App() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/analyses`, {
         method: "POST",
+        credentials: "include",
         body: formData,
       });
       const body = await response.json().catch(() => null);
@@ -56,16 +57,17 @@ function App() {
           <p className="eyebrow">CardiSense</p>
           <h1>ECG analysis</h1>
           <p className="intro">
-            Upload a ZIP containing a WFDB ECG record and analyze it with ECG-FM.
+            Upload one flat archive containing multiple WFDB .hea and .mat
+            files and analyze every record with ECG-FM.
           </p>
         </header>
 
         <form onSubmit={handleSubmit}>
-          <label htmlFor="ecg-file">ECG ZIP file</label>
+          <label htmlFor="ecg-file">ECG dataset archive</label>
           <input
             id="ecg-file"
             type="file"
-            accept=".zip,application/zip"
+            accept=".zip,.rar,.7z,.tar,.tar.gz,.tgz,application/zip,application/vnd.rar,application/x-7z-compressed,application/x-tar,application/gzip"
             disabled={isLoading}
             onChange={(event) => {
               setFile(event.target.files?.[0] ?? null);
@@ -74,32 +76,60 @@ function App() {
           />
 
           <button type="submit" disabled={!file || isLoading}>
-            {isLoading ? "Analyzing…" : "Analyze ECG"}
+            {isLoading ? "Analyzing…" : "Analyze dataset"}
           </button>
         </form>
 
         {isLoading && (
           <div className="status" role="status">
             <span className="spinner" aria-hidden="true" />
-            The model is processing the ECG. This may take a moment.
+            The model is processing each ECG in the dataset. This may take a moment.
           </div>
         )}
 
         {error && <div className="error" role="alert">{error}</div>}
 
-        {result && <AnalysisResult result={result} />}
+        {result && <DatasetAnalysisResult result={result} />}
       </section>
     </main>
   );
 }
 
-function AnalysisResult({ result }) {
+function DatasetAnalysisResult({ result }) {
+  const records = result.records ?? [];
+
   return (
     <section className="results" aria-live="polite">
       <div className="results-heading">
         <div>
-          <p className="eyebrow">Model response</p>
+          <p className="eyebrow">Dataset response</p>
           <h2>Analysis complete</h2>
+        </div>
+        <span className="model-badge">
+          {result.recordCount ?? records.length} records
+        </span>
+      </div>
+
+      <div className="record-results">
+        {records.map((record) => (
+          <AnalysisResult
+            key={record.recordName}
+            recordName={record.recordName}
+            result={record.analysis}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AnalysisResult({ recordName, result }) {
+  return (
+    <article className="record-result">
+      <div className="results-heading">
+        <div>
+          <p className="eyebrow">WFDB record</p>
+          <h3 className="record-name">{recordName}</h3>
         </div>
         <span className="model-badge">{result.model?.id ?? "ECG-FM"}</span>
       </div>
@@ -123,7 +153,7 @@ function AnalysisResult({ result }) {
         </div>
       </dl>
 
-      <h3>Diagnostic probabilities</h3>
+      <h4>Diagnostic probabilities</h4>
       <div className="predictions">
         {result.predictions?.map((prediction) => (
           <div className="prediction" key={prediction.label}>
@@ -141,7 +171,7 @@ function AnalysisResult({ result }) {
           </ul>
         </div>
       )}
-    </section>
+    </article>
   );
 }
 
