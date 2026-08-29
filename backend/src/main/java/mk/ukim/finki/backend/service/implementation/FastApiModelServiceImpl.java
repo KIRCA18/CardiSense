@@ -1,11 +1,11 @@
 package mk.ukim.finki.backend.service.implementation;
 
 import mk.ukim.finki.backend.domain.exception.ModelInferenceException;
-import mk.ukim.finki.backend.domain.externalmodel.FastApiContracts;
+import mk.ukim.finki.backend.service.externalmodel.FastApiContracts;
 import mk.ukim.finki.backend.domain.model.AnalysisResult;
 import mk.ukim.finki.backend.domain.model.CommonEcg;
 import mk.ukim.finki.backend.service.interfaces.ModelInferenceService;
-import mk.ukim.finki.backend.service.mapper.FastApiModelMapper;
+import mk.ukim.finki.backend.web.mapper.FastApiModelMapper;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;

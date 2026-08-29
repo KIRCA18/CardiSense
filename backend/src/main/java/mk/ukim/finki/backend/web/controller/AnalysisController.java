@@ -1,11 +1,11 @@
 package mk.ukim.finki.backend.web.controller;
 
-import mk.ukim.finki.backend.domain.dto.AnalysisResponse;
-import mk.ukim.finki.backend.domain.dto.AnalyzeEcgRequest;
-import mk.ukim.finki.backend.domain.model.AnalysisResult;
+import mk.ukim.finki.backend.domain.dto.DatasetAnalysisDto;
+import mk.ukim.finki.backend.web.request.AnalyzeEcgRequest;
+import mk.ukim.finki.backend.domain.model.DatasetAnalysisResult;
 import mk.ukim.finki.backend.service.interfaces.EcgAnalysisService;
-import mk.ukim.finki.backend.service.mapper.AnalysisResponseMapper;
-import mk.ukim.finki.backend.service.mapper.EcgUploadMapper;
+import mk.ukim.finki.backend.web.mapper.AnalysisResponseMapper;
+import mk.ukim.finki.backend.web.mapper.EcgUploadMapper;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,7 +35,7 @@ public class AnalysisController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public AnalysisResponse analyze(
+    public DatasetAnalysisDto analyze(
             @RequestParam("file") MultipartFile file,
             @RequestParam(
                     name = "modelId",
@@ -43,7 +43,7 @@ public class AnalysisController {
             ) String modelId
     ) {
         AnalyzeEcgRequest request = uploadMapper.toRequest(file, modelId);
-        AnalysisResult result = analysisService.analyze(request);
+        DatasetAnalysisResult result = analysisService.analyze(request);
         return responseMapper.toResponse(result);
     }
 }

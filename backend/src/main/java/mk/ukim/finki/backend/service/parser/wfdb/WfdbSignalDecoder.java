@@ -1,4 +1,4 @@
-package mk.ukim.finki.backend.service.wfdb;
+package mk.ukim.finki.backend.service.parser.wfdb;
 
 import mk.ukim.finki.backend.domain.exception.InvalidEcgException;
 import mk.ukim.finki.backend.domain.model.ParsedEcg;

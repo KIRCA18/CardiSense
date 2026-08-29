@@ -1,4 +1,4 @@
-package mk.ukim.finki.backend.domain.dto;
+package mk.ukim.finki.backend.web.request;
 
 public record AnalyzeEcgRequest(
         String originalFilename,
