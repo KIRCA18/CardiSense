@@ -1,9 +1,9 @@
 package mk.ukim.finki.backend.service.interfaces;
 
-import mk.ukim.finki.backend.domain.dto.AnalyzeEcgRequest;
-import mk.ukim.finki.backend.domain.model.AnalysisResult;
+import mk.ukim.finki.backend.web.request.AnalyzeEcgRequest;
+import mk.ukim.finki.backend.domain.model.DatasetAnalysisResult;
 
 public interface EcgAnalysisService {
 
-    AnalysisResult analyze(AnalyzeEcgRequest request);
+    DatasetAnalysisResult analyze(AnalyzeEcgRequest request);
 }

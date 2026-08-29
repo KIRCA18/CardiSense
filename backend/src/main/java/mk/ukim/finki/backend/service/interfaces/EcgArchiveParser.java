@@ -1,8 +1,10 @@
 package mk.ukim.finki.backend.service.interfaces;
 
-import mk.ukim.finki.backend.domain.model.ParsedEcg;
+import mk.ukim.finki.backend.domain.model.ParsedEcgRecord;
+
+import java.util.List;
 
 public interface EcgArchiveParser {
 
-    ParsedEcg parse(byte[] archive);
+    List<ParsedEcgRecord> parse(String archiveFilename, byte[] archive);
 }

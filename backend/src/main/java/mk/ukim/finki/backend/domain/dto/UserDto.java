@@ -2,7 +2,7 @@ package mk.ukim.finki.backend.domain.dto;
 
 import java.util.UUID;
 
-public record UserResponse (
+public record UserDto(
         UUID id,
         String email,
         String firstName,

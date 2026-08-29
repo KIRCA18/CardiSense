@@ -1,4 +1,4 @@
-package mk.ukim.finki.backend.service.wfdb;
+package mk.ukim.finki.backend.service.parser.wfdb;
 
 import java.util.List;
 import java.util.Map;

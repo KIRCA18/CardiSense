@@ -1,6 +1,6 @@
-package mk.ukim.finki.backend.service.mapper;
+package mk.ukim.finki.backend.web.mapper;
 
-import mk.ukim.finki.backend.domain.dto.AnalyzeEcgRequest;
+import mk.ukim.finki.backend.web.request.AnalyzeEcgRequest;
 import mk.ukim.finki.backend.domain.exception.UploadReadException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
