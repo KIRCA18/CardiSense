@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import mk.ukim.finki.backend.domain.model.AnalysisResult;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -92,5 +93,51 @@ public class Analysis {
         this.inputDurationSeconds = inputDurationSeconds;
         this.resampledSampleCount = resampledSampleCount;
         this.segmentsProcessed = segmentsProcessed;
+    }
+
+    public static Analysis completed(
+            EcgRecord ecgRecord,
+            MlModel model,
+            User requestedBy,
+            AnalysisResult result,
+            Instant startedAt,
+            Instant completedAt
+    ) {
+        Analysis analysis = new Analysis(
+                ecgRecord,
+                model,
+                requestedBy,
+                result.model().device(),
+                result.model().checkpoint(),
+                result.input().leadCount(),
+                result.input().sampleCount(),
+                result.input().samplingRateHz(),
+                result.input().durationSeconds(),
+                result.input().resampledSampleCount(),
+                result.input().segmentsProcessed()
+        );
+
+        analysis.status = Status.COMPLETED;
+        analysis.startedAt = startedAt;
+        analysis.completedAt = completedAt;
+
+        result.predictions().forEach(prediction ->
+                analysis.predictions.add(
+                        new Prediction(
+                                analysis,
+                                prediction.label(),
+                                prediction.score(),
+                                prediction.aggregation()
+                        )
+                )
+        );
+
+        result.warnings().forEach(warning ->
+                analysis.warnings.add(
+                        new AnalysisWarning(analysis, warning)
+                )
+        );
+
+        return analysis;
     }
 }

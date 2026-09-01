@@ -7,16 +7,23 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
+import java.util.UUID;
+
 @Component
 public class EcgUploadMapper {
 
-    public AnalyzeEcgRequest toRequest(MultipartFile file, String modelId) {
+    public AnalyzeEcgRequest toRequest(
+            MultipartFile file,
+            String modelId,
+            UUID requestedByUserId
+    ) {
         try {
             return new AnalyzeEcgRequest(
                     file.getOriginalFilename(),
                     file.getSize(),
                     file.getBytes(),
-                    modelId
+                    modelId,
+                    requestedByUserId
             );
         } catch (IOException exception) {
             throw new UploadReadException(

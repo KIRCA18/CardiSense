@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import mk.ukim.finki.backend.domain.entity.User;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
 @RequestMapping("/analyses")
@@ -40,10 +42,17 @@ public class AnalysisController {
             @RequestParam(
                     name = "modelId",
                     defaultValue = "ecg-fm"
-            ) String modelId
+            ) String modelId,
+            @AuthenticationPrincipal User authenticatedUser
     ) {
-        AnalyzeEcgRequest request = uploadMapper.toRequest(file, modelId);
+        AnalyzeEcgRequest request = uploadMapper.toRequest(
+                file,
+                modelId,
+                authenticatedUser.getId()
+        );
+
         DatasetAnalysisResult result = analysisService.analyze(request);
+
         return responseMapper.toResponse(result);
     }
 }
