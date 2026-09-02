@@ -11,10 +11,21 @@ import { formatRelativeTime } from "../lib/format";
 
 function detectFormat(files) {
   const names = files.map((f) => f.name.toLowerCase());
-  if (names.some((n) => n.endsWith(".edf"))) return "EDF";
-  if (names.some((n) => n.endsWith(".hea") || n.endsWith(".dat"))) return "WFDB";
-  if (names.some((n) => n.endsWith(".scp"))) return "SCP-ECG";
-  if (names.some((n) => n.endsWith(".zip"))) return "ZIP archive";
+  if (names.some((n) => n.endsWith(".dcm"))) return "DICOM";
+  if (names.some((n) => n.endsWith(".hea") || n.endsWith(".mat"))) return "WFDB";
+  if (
+    names.some(
+      (n) =>
+        n.endsWith(".zip") ||
+        n.endsWith(".rar") ||
+        n.endsWith(".7z") ||
+        n.endsWith(".tar") ||
+        n.endsWith(".tar.gz") ||
+        n.endsWith(".tgz"),
+    )
+  ) {
+    return "WFDB archive";
+  }
   return "Unknown";
 }
 
@@ -69,7 +80,7 @@ export default function UploadPage() {
     <div className="animate-fade-up">
       <PageHeader
         title="Upload ECGs"
-        description="Upload a whole folder or a ZIP archive of records as one dataset. Individual records inside become selectable in the Analysis page."
+        description="Upload a WFDB archive or a DICOM ECG waveform file. Individual records inside become selectable in the Analysis page."
       />
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
@@ -155,7 +166,7 @@ export default function UploadPage() {
                 <UploadSimple size={22} />
               </div>
               <div>
-                <p className="text-[15px] font-semibold text-ink">Drop a folder or ZIP here</p>
+                <p className="text-[15px] font-semibold text-ink">Drop a folder, archive, or DICOM file here</p>
                 <p className="text-sm text-ink-muted">or choose one of the options below</p>
               </div>
               <div className="flex gap-2">
@@ -163,10 +174,10 @@ export default function UploadPage() {
                   <FolderOpen size={16} /> Choose folder
                 </Button>
                 <Button variant="secondary" onClick={() => zipInputRef.current?.click()}>
-                  <FileZip size={16} /> Choose ZIP
+                  <FileZip size={16} /> Choose file
                 </Button>
               </div>
-              <p className="text-xs text-ink-faint">Supports WFDB, EDF, and SCP-ECG records</p>
+              <p className="text-xs text-ink-faint">Supports WFDB archives and DICOM ECG waveform files</p>
 
               <input
                 ref={folderInputRef}
@@ -180,7 +191,7 @@ export default function UploadPage() {
               <input
                 ref={zipInputRef}
                 type="file"
-                accept=".zip,application/zip"
+                accept=".dcm,application/dicom,.zip,application/zip,.rar,.7z,.tar,.tar.gz,.tgz"
                 className="hidden"
                 onChange={(e) => acceptFiles(e.target.files)}
               />

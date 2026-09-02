@@ -1,10 +1,12 @@
 package mk.ukim.finki.backend.service.parser.wfdb;
 
+import mk.ukim.finki.backend.domain.enums.EcgFormat;
 import mk.ukim.finki.backend.domain.exception.InvalidEcgException;
 import mk.ukim.finki.backend.domain.model.ParsedEcg;
 import mk.ukim.finki.backend.domain.model.ParsedEcgRecord;
+import mk.ukim.finki.backend.domain.model.PreparedEcgUpload;
 import mk.ukim.finki.backend.service.archive.ArchiveExtractionService;
-import mk.ukim.finki.backend.service.interfaces.EcgArchiveParser;
+import mk.ukim.finki.backend.service.interfaces.EcgFormatAdapter;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -15,13 +17,23 @@ import java.util.Map;
 import java.util.Set;
 
 @Component
-public class WfdbArchiveParser implements EcgArchiveParser {
+public class WfdbArchiveParser implements EcgFormatAdapter {
 
     private static final int MAX_RECORDS = 50;
 
     private final ArchiveExtractionService archiveExtractionService;
     private final WfdbHeaderParser headerParser;
     private final WfdbSignalDecoder signalDecoder;
+
+
+    private static final List<String> SUPPORTED_SUFFIXES = List.of(
+            ".zip",
+            ".rar",
+            ".7z",
+            ".tar",
+            ".tar.gz",
+            ".tgz"
+    );
 
     public WfdbArchiveParser(
             ArchiveExtractionService archiveExtractionService,
@@ -34,17 +46,50 @@ public class WfdbArchiveParser implements EcgArchiveParser {
     }
 
     @Override
-    public List<ParsedEcgRecord> parse(
-            String archiveFilename,
-            byte[] archive
+    public boolean supports(String filename) {
+        if (filename == null) {
+            return false;
+        }
+
+        String normalized = filename.toLowerCase(Locale.ROOT);
+
+        return SUPPORTED_SUFFIXES.stream()
+                .anyMatch(normalized::endsWith);
+    }
+
+    @Override
+    public EcgFormat format() {
+        return EcgFormat.WFDB;
+    }
+
+    @Override
+    public PreparedEcgUpload prepare(
+            String filename,
+            byte[] content
     ) {
         Map<String, byte[]> files = archiveExtractionService.extract(
-                archiveFilename,
-                archive
+                filename,
+                content
         );
 
+        List<ParsedEcgRecord> records = parseFiles(files);
+
+        return new PreparedEcgUpload(
+                EcgFormat.WFDB,
+                filename,
+                content,
+                records
+        );
+    }
+
+
+    private List<ParsedEcgRecord> parseFiles(
+            Map<String, byte[]> files
+    ) {
         List<String> headerFiles = files.keySet().stream()
-                .filter(name -> name.toLowerCase(Locale.ROOT).endsWith(".hea"))
+                .filter(name ->
+                        name.toLowerCase(Locale.ROOT).endsWith(".hea")
+                )
                 .toList();
 
         if (headerFiles.isEmpty()) {

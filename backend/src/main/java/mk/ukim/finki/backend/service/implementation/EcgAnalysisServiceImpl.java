@@ -2,6 +2,7 @@ package mk.ukim.finki.backend.service.implementation;
 
 import jakarta.transaction.Transactional;
 import mk.ukim.finki.backend.domain.entity.*;
+import mk.ukim.finki.backend.domain.enums.EcgFormat;
 import mk.ukim.finki.backend.domain.exception.ModelInferenceException;
 import mk.ukim.finki.backend.domain.model.*;
 import mk.ukim.finki.backend.repository.*;
@@ -19,7 +20,7 @@ import java.util.Locale;
 public class EcgAnalysisServiceImpl implements EcgAnalysisService {
 
     private final EcgUploadValidator uploadValidator;
-    private final EcgArchiveParser archiveParser;
+    private final EcgFormatAdapterSelector adapterSelector;
     private final EcgAnonymizationService anonymizationService;
     private final ModelInferenceService modelInferenceService;
 
@@ -32,7 +33,7 @@ public class EcgAnalysisServiceImpl implements EcgAnalysisService {
 
     public EcgAnalysisServiceImpl(
             EcgUploadValidator uploadValidator,
-            EcgArchiveParser archiveParser,
+            EcgFormatAdapterSelector adapterSelector,
             EcgAnonymizationService anonymizationService,
             ModelInferenceService modelInferenceService,
             EcgUploadRepository uploadRepository,
@@ -43,7 +44,7 @@ public class EcgAnalysisServiceImpl implements EcgAnalysisService {
             UserRepository userRepository
     ) {
         this.uploadValidator = uploadValidator;
-        this.archiveParser = archiveParser;
+        this.adapterSelector = adapterSelector;
         this.anonymizationService = anonymizationService;
         this.modelInferenceService = modelInferenceService;
         this.uploadRepository = uploadRepository;
@@ -75,19 +76,25 @@ public class EcgAnalysisServiceImpl implements EcgAnalysisService {
                         )
                 );
 
-        List<ParsedEcgRecord> parsedRecords = archiveParser.parse(
+        EcgFormatAdapter adapter = adapterSelector.select(
+                request.originalFilename()
+        );
+
+        PreparedEcgUpload preparedUpload = adapter.prepare(
                 request.originalFilename(),
                 request.content()
         );
 
+        List<ParsedEcgRecord> parsedRecords = preparedUpload.records();
+
         EcgUpload upload = uploadRepository.save(
                 new EcgUpload(
-                        request.originalFilename(),
-                        determineArchiveFormat(
+                        preparedUpload.filenameForStorage(),
+                        determineContainerFormat(
                                 request.originalFilename()
                         ),
-                        request.declaredSize(),
-                        request.content()
+                        preparedUpload.contentForStorage().length,
+                        preparedUpload.contentForStorage()
                 )
         );
 
@@ -97,7 +104,8 @@ public class EcgAnalysisServiceImpl implements EcgAnalysisService {
         for (ParsedEcgRecord parsedRecord : parsedRecords) {
             EcgRecord ecgRecord = saveEcgRecord(
                     upload,
-                    parsedRecord
+                    parsedRecord,
+                    preparedUpload.format()
             );
 
             ownershipRepository.save(
@@ -143,7 +151,8 @@ public class EcgAnalysisServiceImpl implements EcgAnalysisService {
 
     private EcgRecord saveEcgRecord(
             EcgUpload upload,
-            ParsedEcgRecord parsedRecord
+            ParsedEcgRecord parsedRecord,
+            EcgFormat format
     ) {
         ParsedEcg parsed = parsedRecord.ecg();
 
@@ -155,7 +164,7 @@ public class EcgAnalysisServiceImpl implements EcgAnalysisService {
         EcgRecord ecgRecord = new EcgRecord(
                 upload,
                 parsedRecord.recordName(),
-                "WFDB",
+                format.name(),
                 parsed.leadNames(),
                 parsed.units(),
                 sampleCount,
@@ -166,8 +175,12 @@ public class EcgAnalysisServiceImpl implements EcgAnalysisService {
         return ecgRecordRepository.save(ecgRecord);
     }
 
-    private String determineArchiveFormat(String filename) {
+    private String determineContainerFormat(String filename) {
         String normalized = filename.toLowerCase(Locale.ROOT);
+
+        if (normalized.endsWith(".dcm")) {
+            return "DIRECT";
+        }
 
         if (
                 normalized.endsWith(".tar.gz") ||
@@ -193,7 +206,7 @@ public class EcgAnalysisServiceImpl implements EcgAnalysisService {
         }
 
         throw new IllegalArgumentException(
-                "Unsupported archive format: " + filename
+                "Unsupported upload format: " + filename
         );
     }
 }
