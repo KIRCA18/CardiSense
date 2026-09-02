@@ -15,6 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 import mk.ukim.finki.backend.domain.entity.User;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/analyses")
 public class AnalysisController {
@@ -38,7 +40,7 @@ public class AnalysisController {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public DatasetAnalysisDto analyze(
-            @RequestParam("file") MultipartFile file,
+            @RequestParam("file") List<MultipartFile> file,
             @RequestParam(
                     name = "modelId",
                     defaultValue = "ecg-fm"
