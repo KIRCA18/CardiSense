@@ -36,11 +36,6 @@ public class DicomFormatAdapter implements EcgFormatAdapter {
     }
 
     @Override
-    public EcgFormat format() {
-        return EcgFormat.DICOM;
-    }
-
-    @Override
     public PreparedEcgUpload prepare(
             String filename,
             byte[] content

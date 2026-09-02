@@ -56,7 +56,7 @@ public class EcgUploadValidator {
 
         if (!supported) {
             throw new InvalidEcgException(
-                    "Upload must be a DICOM .dcm file or a supported WFDB archive"
+                    "Upload must be a DICOM .dcm file or a supported DICOM/WFDB archive"
             );
         }
     }

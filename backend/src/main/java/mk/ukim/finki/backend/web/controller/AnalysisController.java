@@ -40,7 +40,7 @@ public class AnalysisController {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public DatasetAnalysisDto analyze(
-            @RequestParam("file") List<MultipartFile> file,
+            @RequestParam("file") List<MultipartFile> files,
             @RequestParam(
                     name = "modelId",
                     defaultValue = "ecg-fm"
@@ -48,7 +48,7 @@ public class AnalysisController {
             @AuthenticationPrincipal User authenticatedUser
     ) {
         AnalyzeEcgRequest request = uploadMapper.toRequest(
-                file,
+                files,
                 modelId,
                 authenticatedUser.getId()
         );

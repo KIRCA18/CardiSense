@@ -91,7 +91,7 @@ public class EcgAnalysisServiceImpl implements EcgAnalysisService {
                 new EcgUpload(
                         preparedUpload.filenameForStorage(),
                         determineContainerFormat(
-                                request.originalFilename()
+                                preparedUpload.filenameForStorage()
                         ),
                         preparedUpload.contentForStorage().length,
                         preparedUpload.contentForStorage()

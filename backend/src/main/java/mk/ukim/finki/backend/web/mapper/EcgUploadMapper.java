@@ -21,11 +21,18 @@ public class EcgUploadMapper {
     ) {
         if (files == null || files.size() != 1) {
             throw new InvalidEcgException(
-                    "Exactly one ECG file or dataset archive must be uploaded. If you wish to upload multiple ecg files, please provide one ZIP file."
+                    "Exactly one ECG file or dataset archive must be uploaded. " +
+                            "To analyze multiple ECG files, place them in one supported archive."
             );
         }
 
         MultipartFile file = files.get(0);
+
+        if (file == null) {
+            throw new InvalidEcgException(
+                    "Exactly one ECG file or dataset archive must be uploaded"
+            );
+        }
 
         try {
             return new AnalyzeEcgRequest(
