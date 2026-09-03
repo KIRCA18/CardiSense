@@ -237,7 +237,8 @@ public class ArchiveExtractionService {
             if (
                     !normalized.endsWith(".hea") &&
                             !normalized.endsWith(".mat") &&
-                            !normalized.endsWith(".dcm")
+                            !normalized.endsWith(".dcm") &&
+                            !normalized.endsWith(".scp")
             ) {
                 throw new InvalidEcgException(
                         "Unsupported file in archive: " + name

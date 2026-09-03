@@ -15,6 +15,7 @@ public class EcgUploadValidator {
     private static final Set<String> SUPPORTED_MODELS = Set.of("ecg-fm");
     private static final List<String> SUPPORTED_UPLOAD_SUFFIXES = List.of(
             ".dcm",
+            ".scp",
             ".zip",
             ".rar",
             ".7z",
@@ -56,7 +57,8 @@ public class EcgUploadValidator {
 
         if (!supported) {
             throw new InvalidEcgException(
-                    "Upload must be a DICOM .dcm file or a supported DICOM/WFDB archive"
+                    "Upload must be a DICOM .dcm file, an SCP-ECG .scp file, " +
+                            "or a supported DICOM/SCP-ECG/WFDB archive"
             );
         }
     }

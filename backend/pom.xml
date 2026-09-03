@@ -31,6 +31,10 @@
     </properties>
     <repositories>
         <repository>
+            <id>project-lib</id>
+            <url>file://${project.basedir}/lib/repository</url>
+        </repository>
+        <repository>
             <id>dcm4che</id>
             <url>https://www.dcm4che.org/maven2/</url>
         </repository>
@@ -56,6 +60,12 @@
             <groupId>org.dcm4che</groupId>
             <artifactId>dcm4che-deident</artifactId>
             <version>5.34.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.pixelmed</groupId>
+            <artifactId>pixelmed</artifactId>
+            <version>20260608</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

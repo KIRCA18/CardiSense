@@ -178,7 +178,8 @@ public class EcgAnalysisServiceImpl implements EcgAnalysisService {
     private String determineContainerFormat(String filename) {
         String normalized = filename.toLowerCase(Locale.ROOT);
 
-        if (normalized.endsWith(".dcm")) {
+        if (normalized.endsWith(".dcm") ||
+                normalized.endsWith(".scp")) {
             return "DIRECT";
         }
 

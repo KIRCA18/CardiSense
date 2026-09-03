@@ -7,6 +7,7 @@ import mk.ukim.finki.backend.domain.model.PreparedEcgUpload;
 import mk.ukim.finki.backend.service.archive.ArchiveExtractionService;
 import mk.ukim.finki.backend.service.interfaces.EcgFormatAdapter;
 import mk.ukim.finki.backend.service.parser.dicom.DicomFormatAdapter;
+import mk.ukim.finki.backend.service.parser.scp.ScpFormatAdapter;
 import mk.ukim.finki.backend.service.parser.wfdb.WfdbDatasetParser;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +27,7 @@ import java.util.zip.ZipOutputStream;
 @Component
 public class ArchiveFormatAdapter implements EcgFormatAdapter {
 
-    private static final int MAX_DICOM_RECORDS = 50;
+    private static final int MAX_SINGLE_FILE_RECORDS = 50;
 
     private static final List<String> SUPPORTED_SUFFIXES = List.of(
             ".zip",
@@ -40,15 +41,18 @@ public class ArchiveFormatAdapter implements EcgFormatAdapter {
     private final ArchiveExtractionService archiveExtractionService;
     private final WfdbDatasetParser wfdbDatasetParser;
     private final DicomFormatAdapter dicomFormatAdapter;
+    private final ScpFormatAdapter scpFormatAdapter;
 
     public ArchiveFormatAdapter(
             ArchiveExtractionService archiveExtractionService,
             WfdbDatasetParser wfdbDatasetParser,
-            DicomFormatAdapter dicomFormatAdapter
+            DicomFormatAdapter dicomFormatAdapter,
+            ScpFormatAdapter scpFormatAdapter
     ) {
         this.archiveExtractionService = archiveExtractionService;
         this.wfdbDatasetParser = wfdbDatasetParser;
         this.dicomFormatAdapter = dicomFormatAdapter;
+        this.scpFormatAdapter = scpFormatAdapter;
     }
 
     @Override
@@ -70,17 +74,38 @@ public class ArchiveFormatAdapter implements EcgFormatAdapter {
 
         boolean containsDicom = files.keySet().stream()
                 .anyMatch(this::isDicom);
+        boolean containsScp = files.keySet().stream()
+                .anyMatch(this::isScp);
         boolean containsWfdb = files.keySet().stream()
                 .anyMatch(this::isWfdb);
 
-        if (containsDicom && containsWfdb) {
+        int formatCount = (containsDicom ? 1 : 0) +
+                (containsScp ? 1 : 0) +
+                (containsWfdb ? 1 : 0);
+        if (formatCount > 1) {
             throw new InvalidEcgException(
-                    "Dataset archive cannot mix DICOM and WFDB files"
+                    "Dataset archive cannot mix DICOM, SCP-ECG and WFDB files"
             );
         }
 
         if (containsDicom) {
-            return prepareDicomDataset(files);
+            return prepareSingleFileDataset(
+                    files,
+                    dicomFormatAdapter,
+                    EcgFormat.DICOM,
+                    "DICOM",
+                    "dicom"
+            );
+        }
+
+        if (containsScp) {
+            return prepareSingleFileDataset(
+                    files,
+                    scpFormatAdapter,
+                    EcgFormat.SCP_ECG,
+                    "SCP-ECG",
+                    "scp"
+            );
         }
 
         return new PreparedEcgUpload(
@@ -91,13 +116,17 @@ public class ArchiveFormatAdapter implements EcgFormatAdapter {
         );
     }
 
-    private PreparedEcgUpload prepareDicomDataset(
-            Map<String, byte[]> files
+    private PreparedEcgUpload prepareSingleFileDataset(
+            Map<String, byte[]> files,
+            EcgFormatAdapter adapter,
+            EcgFormat format,
+            String formatLabel,
+            String filenamePrefix
     ) {
-        if (files.size() > MAX_DICOM_RECORDS) {
+        if (files.size() > MAX_SINGLE_FILE_RECORDS) {
             throw new InvalidEcgException(
-                    "Dataset archive contains more than %d DICOM ECG records"
-                            .formatted(MAX_DICOM_RECORDS)
+                    "Dataset archive contains more than %d %s records"
+                            .formatted(MAX_SINGLE_FILE_RECORDS, formatLabel)
             );
         }
 
@@ -108,42 +137,51 @@ public class ArchiveFormatAdapter implements EcgFormatAdapter {
         for (Map.Entry<String, byte[]> file : files.entrySet()) {
             if (file.getValue().length == 0) {
                 throw new InvalidEcgException(
-                        "DICOM file in dataset archive is empty: " + file.getKey()
+                        "%s file in dataset archive is empty: %s"
+                                .formatted(formatLabel, file.getKey())
                 );
             }
 
-            PreparedEcgUpload preparedDicom = dicomFormatAdapter.prepare(
+            PreparedEcgUpload preparedFile = adapter.prepare(
                     file.getKey(),
                     file.getValue()
             );
 
-            ParsedEcgRecord record = preparedDicom.records().get(0);
+            if (preparedFile.records().size() != 1) {
+                throw new IllegalStateException(
+                        formatLabel + " adapter must return exactly one record"
+                );
+            }
+
+            ParsedEcgRecord record = preparedFile.records().get(0);
             String normalizedRecordName = record.recordName()
                     .toLowerCase(Locale.ROOT);
 
             if (!recordNames.add(normalizedRecordName)) {
                 throw new InvalidEcgException(
-                        "Dataset archive contains duplicate DICOM record ID: " +
-                                record.recordName()
+                        "Dataset archive contains duplicate %s record ID: %s"
+                                .formatted(formatLabel, record.recordName())
                 );
             }
 
             if (anonymizedFiles.putIfAbsent(
-                    preparedDicom.filenameForStorage(),
-                    preparedDicom.contentForStorage()
+                    preparedFile.filenameForStorage(),
+                    preparedFile.contentForStorage()
             ) != null) {
                 throw new InvalidEcgException(
-                        "Dataset archive produces duplicate anonymized DICOM filenames"
+                        "Dataset archive produces duplicate anonymized %s filenames"
+                                .formatted(formatLabel)
                 );
             }
 
             records.add(record);
         }
 
-        String safeFilename = "dicom-dataset-" + UUID.randomUUID() + ".zip";
+        String safeFilename = filenamePrefix + "-dataset-" +
+                UUID.randomUUID() + ".zip";
 
         return new PreparedEcgUpload(
-                EcgFormat.DICOM,
+                format,
                 safeFilename,
                 createZip(anonymizedFiles),
                 List.copyOf(records)
@@ -167,7 +205,7 @@ public class ArchiveFormatAdapter implements EcgFormatAdapter {
             return bytes.toByteArray();
         } catch (IOException exception) {
             throw new InvalidEcgException(
-                    "Could not create anonymized DICOM dataset archive",
+                    "Could not create anonymized ECG dataset archive",
                     exception
             );
         }
@@ -180,5 +218,9 @@ public class ArchiveFormatAdapter implements EcgFormatAdapter {
     private boolean isWfdb(String filename) {
         String normalized = filename.toLowerCase(Locale.ROOT);
         return normalized.endsWith(".hea") || normalized.endsWith(".mat");
+    }
+
+    private boolean isScp(String filename) {
+        return filename.toLowerCase(Locale.ROOT).endsWith(".scp");
     }
 }
