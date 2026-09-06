@@ -3,8 +3,6 @@ package mk.ukim.finki.backend.service.parser.wfdb;
 import mk.ukim.finki.backend.domain.exception.InvalidEcgException;
 import mk.ukim.finki.backend.domain.model.ParsedEcg;
 import mk.ukim.finki.backend.domain.model.ParsedEcgRecord;
-import mk.ukim.finki.backend.service.archive.ArchiveExtractionService;
-import mk.ukim.finki.backend.service.interfaces.EcgArchiveParser;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -15,41 +13,29 @@ import java.util.Map;
 import java.util.Set;
 
 @Component
-public class WfdbArchiveParser implements EcgArchiveParser {
+public class WfdbDatasetParser {
 
     private static final int MAX_RECORDS = 50;
 
-    private final ArchiveExtractionService archiveExtractionService;
     private final WfdbHeaderParser headerParser;
     private final WfdbSignalDecoder signalDecoder;
 
-    public WfdbArchiveParser(
-            ArchiveExtractionService archiveExtractionService,
+    public WfdbDatasetParser(
             WfdbHeaderParser headerParser,
             WfdbSignalDecoder signalDecoder
     ) {
-        this.archiveExtractionService = archiveExtractionService;
         this.headerParser = headerParser;
         this.signalDecoder = signalDecoder;
     }
 
-    @Override
-    public List<ParsedEcgRecord> parse(
-            String archiveFilename,
-            byte[] archive
-    ) {
-        Map<String, byte[]> files = archiveExtractionService.extract(
-                archiveFilename,
-                archive
-        );
-
+    public List<ParsedEcgRecord> parse(Map<String, byte[]> files) {
         List<String> headerFiles = files.keySet().stream()
                 .filter(name -> name.toLowerCase(Locale.ROOT).endsWith(".hea"))
                 .toList();
 
         if (headerFiles.isEmpty()) {
             throw new InvalidEcgException(
-                    "Dataset archive must contain at least one .hea file"
+                    "WFDB dataset archive must contain at least one .hea file"
             );
         }
 
@@ -113,5 +99,4 @@ public class WfdbArchiveParser implements EcgArchiveParser {
         ParsedEcg ecg = signalDecoder.decode(header, signalFile);
         return new ParsedEcgRecord(header.recordName(), ecg);
     }
-
 }

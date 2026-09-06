@@ -11,5 +11,7 @@ public interface MlModelRepository extends JpaRepository<MlModel, UUID> {
 
     Optional<MlModel> findByModelKey(String modelKey);
 
+    Optional<MlModel> findByModelKeyAndActiveTrue(String modelKey);
+
     List<MlModel> findByActiveTrue();
 }

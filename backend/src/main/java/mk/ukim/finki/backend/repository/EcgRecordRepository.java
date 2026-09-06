@@ -8,5 +8,4 @@ import java.util.UUID;
 
 public interface EcgRecordRepository extends JpaRepository<EcgRecord, UUID> {
 
-    Optional<EcgRecord> findByChecksumSha256(String checksumSha256);
 }

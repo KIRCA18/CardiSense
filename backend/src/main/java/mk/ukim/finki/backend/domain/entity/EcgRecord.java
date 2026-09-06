@@ -20,14 +20,16 @@ public class EcgRecord {
     @GeneratedValue
     private UUID id;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "upload_id", nullable = false)
+    private EcgUpload upload;
+
+    @Column(nullable = false)
+    private String recordName;
+
     @Column(nullable = false)
     private String originalFormat;
 
-    @Column(nullable = false)
-    private String storageUri;
-
-    @Column(nullable = false)
-    private String waveformUri;
 
     @ElementCollection
     @CollectionTable(name = "ecg_record_lead_names", joinColumns = @JoinColumn(name = "ecg_record_id"))
@@ -50,23 +52,28 @@ public class EcgRecord {
     @Column(nullable = false)
     private double durationSeconds;
 
-    @Column(nullable = false)
-    private String checksumSha256;
+
 
     @Column(nullable = false)
     private Instant uploadedAt = Instant.now();
 
-    public EcgRecord(String originalFormat, String storageUri, String waveformUri,
-                      List<String> leadNames, List<String> units, int sampleCount,
-                      double samplingRateHz, double durationSeconds, String checksumSha256) {
+    public EcgRecord(
+            EcgUpload upload,
+            String recordName,
+            String originalFormat,
+            List<String> leadNames,
+            List<String> units,
+            int sampleCount,
+            double samplingRateHz,
+            double durationSeconds
+    ) {
+        this.upload = upload;
+        this.recordName = recordName;
         this.originalFormat = originalFormat;
-        this.storageUri = storageUri;
-        this.waveformUri = waveformUri;
-        this.leadNames = leadNames;
-        this.units = units;
+        this.leadNames = List.copyOf(leadNames);
+        this.units = List.copyOf(units);
         this.sampleCount = sampleCount;
         this.samplingRateHz = samplingRateHz;
         this.durationSeconds = durationSeconds;
-        this.checksumSha256 = checksumSha256;
     }
 }

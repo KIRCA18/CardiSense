@@ -236,7 +236,9 @@ public class ArchiveExtractionService {
             String normalized = name.toLowerCase(Locale.ROOT);
             if (
                     !normalized.endsWith(".hea") &&
-                            !normalized.endsWith(".mat")
+                            !normalized.endsWith(".mat") &&
+                            !normalized.endsWith(".dcm") &&
+                            !normalized.endsWith(".scp")
             ) {
                 throw new InvalidEcgException(
                         "Unsupported file in archive: " + name
