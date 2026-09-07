@@ -17,7 +17,7 @@ class EcgFounderAdapter(ModelAdapter):
     required_leads = ["I", "II", "III", "aVR", "aVL", "aVF", "V1", "V2", "V3", "V4", "V5", "V6"]
     sampling_rate_hz = 500
     segment_seconds = 10
-    samples_per_segment = 5000
+    samples_per_segment = sampling_rate_hz * segment_seconds
     accepts_other_sampling_rates = True
 
     def __init__(self) -> None:
@@ -99,8 +99,7 @@ class EcgFounderAdapter(ModelAdapter):
         segments = waveform.reshape(12, segment_count, self.samples_per_segment)
         segments = segments.transpose(1, 0, 2).copy()
 
-        # Each window follows the original single-record global normalization:
-        # one mean/std across its 12 leads and 5000 samples.
+        # Standardization
         mean = segments.mean(axis=(1, 2), keepdims=True)
         std = segments.std(axis=(1, 2), keepdims=True)
         if not np.isfinite(std).all() or not np.isfinite(mean).all() or (std == 0).any():
@@ -126,7 +125,7 @@ class EcgFounderAdapter(ModelAdapter):
             window_scores = torch.sigmoid(logits).cpu().numpy()
         if not np.isfinite(window_scores).all():
             raise RuntimeError("ECGFounder returned non-finite scores")
-        # Application-level aggregation policy, not a checkpoint-provided rule.
+    
         scores = window_scores.mean(axis=0)
         predictions = [Prediction(label=label, score=float(score), aggregation="mean")
                        for label, score in zip(self.labels, scores)]
