@@ -1,0 +1,20 @@
+# Python artifacts, including from locally cloned research repositories.
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Local model weights and downloaded upstream repositories.
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+/ECGFounder/
+/model-service/vendor/
+/model-service/ECGFounder/
+/model-service/ckpts/
+/model-service/checkpoints/

@@ -6,13 +6,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 @Component
 public class EcgUploadValidator {
 
     private static final long MAX_UPLOAD_BYTES = 50L * 1024 * 1024;
-    private static final Set<String> SUPPORTED_MODELS = Set.of("ecg-fm");
     private static final List<String> SUPPORTED_UPLOAD_SUFFIXES = List.of(
             ".dcm",
             ".scp",
@@ -68,8 +66,6 @@ public class EcgUploadValidator {
             throw new InvalidEcgException("A model ID is required");
         }
 
-        if (!SUPPORTED_MODELS.contains(modelId)) {
-            throw new InvalidEcgException("Unsupported model: " + modelId);
-        }
+
     }
 }

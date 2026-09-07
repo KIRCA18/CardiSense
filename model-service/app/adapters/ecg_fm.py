@@ -8,7 +8,7 @@ import torch
 from huggingface_hub import hf_hub_download
 from scipy.signal import resample_poly
 
-from fairseq_signals.models import build_model_from_checkpoint
+from app.adapters.base import ModelAdapter
 
 from app.schemas import CommonEcgInput, InferenceResponse, InputSummary, ModelInfo, Prediction
 
@@ -46,11 +46,16 @@ AGGREGATION_METHODS = {
 UNIT_TO_MILLIVOLTS = {"mv": 1.0, "uv": 0.001, "v": 1000.0}
 
 
-class EcgFmModel:
-    
+class EcgFmAdapter(ModelAdapter):
+    model_id = MODEL_ID
+    name = "ECG-FM"
+    required_leads = LEAD_ORDER
+    sampling_rate_hz = SAMPLE_RATE
+    segment_seconds = SEGMENT_SECONDS
+    accepts_other_sampling_rates = True
 
     def __init__(self) -> None:
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(os.getenv("ECG_FM_DEVICE", "cuda" if torch.cuda.is_available() else "cpu"))
         self.model = None
         self.checkpoint_path: Path | None = None
         self.load_error: str | None = None
@@ -62,13 +67,15 @@ class EcgFmModel:
 
     def load(self) -> None:
         try:
+            from fairseq_signals.models import build_model_from_checkpoint
+
             configured_checkpoint = os.getenv("ECG_FM_CHECKPOINT")
             if configured_checkpoint:
                 checkpoint_path = Path(configured_checkpoint).expanduser().resolve()
                 if not checkpoint_path.is_file():
                     raise FileNotFoundError(f"ECG_FM_CHECKPOINT does not exist: {checkpoint_path}")
             else:
-                default_dir = Path(__file__).resolve().parents[1] / "ckpts"
+                default_dir = Path(__file__).resolve().parents[2] / "ckpts"
                 checkpoint_dir = Path(os.getenv("ECG_FM_CHECKPOINT_DIR", str(default_dir))).expanduser()
                 checkpoint_dir.mkdir(parents=True, exist_ok=True)
                 checkpoint_path = Path(hf_hub_download(
