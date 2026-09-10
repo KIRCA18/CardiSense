@@ -51,14 +51,14 @@ class CommonEcgInput(BaseModel):
 class InferenceRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    model_id: Literal["ecg-fm"] = "ecg-fm"
+    model_id: str = Field(default="ecg-fm", min_length=1, max_length=128)
     ecg: CommonEcgInput
 
 
 class Prediction(BaseModel):
     label: str
     score: float = Field(ge=0, le=1)
-    aggregation: Literal["mean", "max"]
+    aggregation: Literal["mean", "max", "none"]
 
 
 class ModelInfo(BaseModel):
@@ -85,11 +85,8 @@ class InferenceResponse(BaseModel):
 
 
 class HealthResponse(BaseModel):
-    status: Literal["ready", "not_ready"]
-    model_id: str
-    device: str
-    checkpoint_loaded: bool
-    detail: str | None = None
+    status: Literal["ready", "degraded", "not_ready"]
+    models: list["AvailableModel"]
 
 
 class AvailableModel(BaseModel):
@@ -99,3 +96,6 @@ class AvailableModel(BaseModel):
     required_leads: list[str]
     sampling_rate_hz: int
     segment_seconds: int
+    required_sample_count: int | None = None
+    accepts_other_sampling_rates: bool = False
+    detail: str | None = None

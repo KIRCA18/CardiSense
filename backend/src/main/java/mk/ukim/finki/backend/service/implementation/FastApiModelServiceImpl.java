@@ -45,6 +45,14 @@ public class FastApiModelServiceImpl implements ModelInferenceService {
                 );
             }
 
+            if (response.model() == null ||
+                    !modelId.equals(response.model().id()) ||
+                    !ecg.recordId().equals(response.recordId())) {
+                throw new ModelInferenceException(
+                        "Model service response does not match the requested model and ECG record"
+                );
+            }
+
             return mapper.toDomain(response);
 
         } catch (RestClientResponseException exception) {

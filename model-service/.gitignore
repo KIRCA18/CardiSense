@@ -1,9 +1,17 @@
 fairseq-core/
 fairseq-signals/
+vendor/
+ECGFounder/
+src/
 
 # ignore checkpoints
 *.pt
+*.pth
+*.ckpt
+*.safetensors
 ckpts/
+checkpoints/
+.cache/
 
 
 #ignore envs
@@ -14,6 +22,11 @@ venv/
 
 #ignore env vars
 .env
+.env.*
+!.env.example
 
 __pycache__/
-*.py[cod
+*.py[cod]
+.pytest_cache/
+.idea/
+.vscode/
