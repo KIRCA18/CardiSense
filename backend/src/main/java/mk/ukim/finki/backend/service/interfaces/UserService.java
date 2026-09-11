@@ -10,4 +10,6 @@ public interface UserService extends UserDetailsService {
     User findByEmail(String email);
 
     void sendVerificationMail(User user);
+    void verifyEmail(String email, String code);
+    void resendCode(String email);
 }

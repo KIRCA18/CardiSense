@@ -16,8 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -32,7 +30,6 @@ public class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
 
-
         String jwt = null;
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
@@ -44,19 +41,23 @@ public class JwtCookieAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (jwt != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            String userEmail = jwtService.extractEmail(jwt);
+            try {
+                String userEmail = jwtService.extractEmail(jwt);
 
-            if (userEmail != null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+                if (userEmail != null) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
-                if (jwtService.isTokenValid(jwt, userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities()
-                    );
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    if (jwtService.isTokenValid(jwt, userDetails)) {
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities()
+                        );
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
                 }
+            } catch (Exception ex) {
+                SecurityContextHolder.clearContext();
             }
         }
         filterChain.doFilter(request, response);
