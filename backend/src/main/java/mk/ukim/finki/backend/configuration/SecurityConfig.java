@@ -1,5 +1,6 @@
 package mk.ukim.finki.backend.configuration;
 
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import mk.ukim.finki.backend.web.filter.JwtCookieAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +28,8 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
+                        .dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD).permitAll()
+                        .requestMatchers("/auth/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

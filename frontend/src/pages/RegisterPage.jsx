@@ -1,30 +1,33 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import EcgMark from "../components/ui/EcgMark";
-import TextField from "../components/ui/TextField";
-import Button from "../components/ui/Button";
-import { useAuth } from "../lib/auth";
+import { useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
+import EcgMark from "../components/ui/EcgMark"
+import TextField from "../components/ui/TextField"
+import Button from "../components/ui/Button"
+import { useAuth } from "../lib/auth"
 
 export default function RegisterPage() {
-  const { register } = useAuth();
-  const navigate = useNavigate();
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { register } = useAuth()
+  const navigate = useNavigate()
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
   async function handleSubmit(event) {
-    event.preventDefault();
-    setError("");
-    setLoading(true);
+    event.preventDefault()
+    setError("")
+    setLoading(true)
     try {
-      await register({ fullName, email, password });
-      navigate("/verify-email", { replace: true, state: { email, fullName } });
+      await register({ firstName, lastName, email, password })
+      navigate("/verify-email", { replace: true, state: { email, firstName, lastName } })
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create your account.");
+      setError(
+        err instanceof Error ? err.message : "Could not create your account.",
+      )
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
@@ -35,19 +38,35 @@ export default function RegisterPage() {
           <Link to="/" aria-label="CardiSense home">
             <EcgMark className="h-6 w-14 text-primary" strokeWidth={4} />
           </Link>
-          <h1 className="text-xl font-semibold tracking-tight text-ink">Create your account</h1>
-          <p className="text-sm text-ink-muted">Upload datasets and run ECG models.</p>
+          <h1 className="text-xl font-semibold tracking-tight text-ink">
+            Create your account
+          </h1>
+          <p className="text-sm text-ink-muted">
+            Upload datasets and run ECG models.
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="rounded-2xl border border-border bg-canvas p-6 shadow-[var(--shadow-card)]">
+        <form
+          onSubmit={handleSubmit}
+          className="rounded-2xl border border-border bg-canvas p-6 shadow-[var(--shadow-card)]"
+        >
           <div className="flex flex-col gap-4">
             <TextField
-              id="fullName"
-              label="Full name"
-              autoComplete="name"
-              placeholder="Ada Lovelace"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              id="firstName"
+              label="First name"
+              autoComplete="first name"
+              placeholder="Example"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+            />
+            <TextField
+              id="lastName"
+              label="Last name"
+              autoComplete="last name"
+              placeholder="Example"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
               required
             />
             <TextField
@@ -72,7 +91,11 @@ export default function RegisterPage() {
               required
             />
             {error && (
-              <p role="alert" aria-live="polite" className="text-sm text-danger">
+              <p
+                role="alert"
+                aria-live="polite"
+                className="text-sm text-danger"
+              >
                 {error}
               </p>
             )}
@@ -84,11 +107,14 @@ export default function RegisterPage() {
 
         <p className="mt-5 text-center text-sm text-ink-muted">
           Already have an account?{" "}
-          <Link to="/login" className="font-medium text-primary hover:text-primary-strong">
+          <Link
+            to="/login"
+            className="font-medium text-primary hover:text-primary-strong"
+          >
             Log in
           </Link>
         </p>
       </div>
     </div>
-  );
+  )
 }

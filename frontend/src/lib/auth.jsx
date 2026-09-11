@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import * as api from "./mockApi";
+import * as api from "./api";
 
 const AuthContext = createContext(null);
 
@@ -29,14 +29,11 @@ export function AuthProvider({ children }) {
   }
 
   async function register(details) {
-    // Note: intentionally does not persist a session yet — the account
-    // isn't usable until verifyEmail() below succeeds.
     return api.register(details);
   }
 
-  async function verifyEmail({ email, code, fullName }) {
-    await api.verifyEmail({ email, code });
-    const nextUser = { email, fullName };
+  async function verifyEmail({ email, code }) {
+    const nextUser = await api.verifyEmail({ email, code });
     persist(nextUser);
     return nextUser;
   }

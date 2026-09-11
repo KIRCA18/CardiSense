@@ -15,18 +15,22 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event) {
-    event.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      await login({ email, password });
-      navigate(location.state?.from?.pathname ?? "/app", { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not log in.");
-    } finally {
-      setLoading(false);
+  event.preventDefault();
+  setError("");
+  setLoading(true);
+  try {
+    await login({ email, password });
+    navigate(location.state?.from?.pathname ?? "/app", { replace: true });
+  } catch (err) {
+    if (err.status === 403) {
+      navigate("/verify-email", { replace: true, state: { email } });
+      return;
     }
+    setError(err instanceof Error ? err.message : "Could not log in.");
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4">
