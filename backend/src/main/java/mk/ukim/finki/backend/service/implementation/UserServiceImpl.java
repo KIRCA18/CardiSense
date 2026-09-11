@@ -6,7 +6,7 @@ import mk.ukim.finki.backend.domain.exception.*;
 import mk.ukim.finki.backend.repository.VerificationCodeRepository;
 import mk.ukim.finki.backend.service.interfaces.MailService;
 import mk.ukim.finki.backend.service.interfaces.UserService;
-import mk.ukim.finki.backend.domain.dto.CreateUserRequest;
+import mk.ukim.finki.backend.web.request.CreateUserRequest;
 import mk.ukim.finki.backend.domain.entity.User;
 import mk.ukim.finki.backend.repository.UserRepository;
 import mk.ukim.finki.backend.service.interfaces.VerificationCodeService;

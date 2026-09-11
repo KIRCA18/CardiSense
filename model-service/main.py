@@ -4,6 +4,8 @@ import uvicorn
 
 from app.main import app
 
+# Activate venv: .venv\Scripts\Activate.ps1
+# Run service: python main.py
 
 if __name__ == "__main__":
     uvicorn.run(

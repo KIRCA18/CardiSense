@@ -10,9 +10,12 @@ import java.util.UUID;
 @Service
 public class EcgAnonymizationService {
 
-    public CommonEcg anonymize(ParsedEcg parsed) {
+    public CommonEcg anonymize(
+            UUID ecgRecordId,
+            ParsedEcg parsed
+    ) {
         return new CommonEcg(
-                UUID.randomUUID().toString(),
+                ecgRecordId.toString(),
                 parsed.waveform(),
                 List.copyOf(parsed.leadNames()),
                 parsed.samplingRateHz(),
