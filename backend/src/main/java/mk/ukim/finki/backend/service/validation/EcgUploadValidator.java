@@ -27,19 +27,21 @@ public class EcgUploadValidator {
             throw new InvalidEcgException("ECG analysis request is required");
         }
 
-        validateContent(request);
-        validateFilename(request.originalFilename());
+        validateUpload(request.originalFilename(), request.content(), request.declaredSize());
         validateModel(request.modelId());
     }
 
-    private void validateContent(AnalyzeEcgRequest request) {
-        byte[] content = request.content();
+    public void validateUpload(String filename, byte[] content, long declaredSize) {
+        validateContent(content, declaredSize);
+        validateFilename(filename);
+    }
 
+    private void validateContent(byte[] content, long declaredSize) {
         if (content == null || content.length == 0) {
             throw new InvalidEcgException("Uploaded ECG file is empty");
         }
 
-        if (content.length > MAX_UPLOAD_BYTES || request.declaredSize() > MAX_UPLOAD_BYTES) {
+        if (content.length > MAX_UPLOAD_BYTES || declaredSize > MAX_UPLOAD_BYTES) {
             throw new InvalidEcgException("Uploaded ECG file exceeds 50 MB");
         }
     }
@@ -65,7 +67,5 @@ public class EcgUploadValidator {
         if (modelId == null || modelId.isBlank()) {
             throw new InvalidEcgException("A model ID is required");
         }
-
-
     }
 }

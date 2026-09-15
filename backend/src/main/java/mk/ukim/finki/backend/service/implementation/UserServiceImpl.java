@@ -21,8 +21,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 
-import static java.awt.SystemColor.text;
-
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -54,7 +52,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User logIn(String email, String password) {
-        User user = userRepository.findByEmail(email).orElseThrow(InvalidCredentialsException::new);
+        User user = userRepository.findByEmail(email.toLowerCase()).orElseThrow(InvalidCredentialsException::new);
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new InvalidCredentialsException();
         }
@@ -69,7 +67,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User findByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException(email));
+        return userRepository.findByEmail(email.toLowerCase()).orElseThrow(() -> new UsernameNotFoundException(email));
     }
 
     @Override

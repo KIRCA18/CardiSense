@@ -79,9 +79,9 @@ public class Analysis {
     }
 
     public Analysis(EcgRecord ecgRecord, MlModel model, User requestedBy, String deviceUsed,
-                     String checkpointUsed, int inputLeadCount, int inputSampleCount,
-                     double inputSamplingRateHz, double inputDurationSeconds,
-                     int resampledSampleCount, int segmentsProcessed) {
+                    String checkpointUsed, int inputLeadCount, int inputSampleCount,
+                    double inputSamplingRateHz, double inputDurationSeconds,
+                    int resampledSampleCount, int segmentsProcessed) {
         this.ecgRecord = ecgRecord;
         this.model = model;
         this.requestedBy = requestedBy;
@@ -138,6 +138,25 @@ public class Analysis {
                 )
         );
 
+        return analysis;
+    }
+
+    public static Analysis failed(
+            EcgRecord ecgRecord,
+            MlModel model,
+            User requestedBy,
+            String errorMessage,
+            Instant startedAt,
+            Instant completedAt
+    ) {
+        Analysis analysis = new Analysis(
+                ecgRecord, model, requestedBy,
+                "n/a", "n/a", 0, 0, 0, 0, 0, 0
+        );
+        analysis.status = Status.FAILED;
+        analysis.startedAt = startedAt;
+        analysis.completedAt = completedAt;
+        analysis.errorMessage = errorMessage == null ? "Analysis failed" : errorMessage;
         return analysis;
     }
 }

@@ -20,6 +20,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class ScpFormatAdapter implements EcgFormatAdapter {
@@ -30,6 +32,10 @@ public class ScpFormatAdapter implements EcgFormatAdapter {
     );
     private static final int MAX_SAMPLES_PER_LEAD = 300_000;
     private static final double NANOVOLTS_PER_MILLIVOLT = 1_000_000.0;
+    private static final Pattern STORED_SCP_FILENAME = Pattern.compile(
+            "^(scp-[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12})\\.scp$",
+            Pattern.CASE_INSENSITIVE
+    );
 
     private final ScpAnonymizationService anonymizationService;
 
@@ -46,8 +52,7 @@ public class ScpFormatAdapter implements EcgFormatAdapter {
     @Override
     public PreparedEcgUpload prepare(String filename, byte[] content) {
         byte[] anonymizedContent = anonymizationService.anonymize(content);
-        String generatedId = UUID.randomUUID().toString();
-        String recordName = "scp-" + generatedId;
+        String recordName = resolveRecordName(filename);
 
         ParsedEcgRecord record = new ParsedEcgRecord(
                 recordName,
@@ -60,6 +65,18 @@ public class ScpFormatAdapter implements EcgFormatAdapter {
                 anonymizedContent,
                 List.of(record)
         );
+    }
+
+    private String resolveRecordName(String filename) {
+        String normalized = filename.replace('\\', '/');
+        String fileName = normalized.substring(normalized.lastIndexOf('/') + 1);
+        Matcher matcher = STORED_SCP_FILENAME.matcher(fileName);
+
+        if (matcher.matches()) {
+            return matcher.group(1).toLowerCase(Locale.ROOT);
+        }
+
+        return "scp-" + UUID.randomUUID();
     }
 
     private ParsedEcg parse(byte[] content) {

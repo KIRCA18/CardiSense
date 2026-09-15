@@ -6,11 +6,26 @@ const AuthContext = createContext(null);
 const STORAGE_KEY = "cardisense.session";
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(undefined); // undefined = not yet resolved
+  const [user, setUser] = useState(undefined);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     setUser(stored ? JSON.parse(stored) : null);
+
+    let cancelled = false;
+    api
+        .me()
+        .then((confirmed) => {
+          if (!cancelled) persist(confirmed);
+        })
+        .catch((err) => {
+          if (!cancelled && (err?.status === 401 || err?.status === 403)) {
+            persist(null);
+          }
+        });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   function persist(nextUser) {
@@ -43,9 +58,9 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, register, verifyEmail, logout }}>
-      {children}
-    </AuthContext.Provider>
+      <AuthContext.Provider value={{ user, login, register, verifyEmail, logout }}>
+        {children}
+      </AuthContext.Provider>
   );
 }
 

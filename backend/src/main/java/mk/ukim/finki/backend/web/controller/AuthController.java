@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import mk.ukim.finki.backend.domain.dto.*;
 import mk.ukim.finki.backend.service.interfaces.JwtService;
 import mk.ukim.finki.backend.service.interfaces.UserService;
-import mk.ukim.finki.backend.service.mapper.UserMapper;
+import mk.ukim.finki.backend.web.mapper.UserMapper;
 import mk.ukim.finki.backend.domain.entity.User;
 import mk.ukim.finki.backend.web.request.CreateUserRequest;
 import mk.ukim.finki.backend.web.request.LogInRequest;
@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -34,28 +35,28 @@ public class AuthController {
         User user = userService.logIn(request.email(), request.password());
 
         String token = jwtService.generateToken(user);
-
-        ResponseCookie cookie = ResponseCookie.from("jwt", token)
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(24 * 60 * 60)
-                .sameSite("Lax")
-                .build();
+        ResponseCookie cookie = authCookie(token);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body(UserMapper.toResponse(user));
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> me(@AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(UserMapper.toResponse(user));
+    }
+
     @PostMapping("/verify-email")
-    public ResponseEntity<UserResponse> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+    public ResponseEntity<UserDto> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
         userService.verifyEmail(request.email(), request.code());
         User user = userService.findByEmail(request.email());
 
         String token = jwtService.generateToken(user);
-        ResponseCookie cookie = ResponseCookie.from("jwt", token)
-                .httpOnly(true).secure(false).path("/").maxAge(24 * 60 * 60).sameSite("Lax").build();
+        ResponseCookie cookie = authCookie(token);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
@@ -66,5 +67,15 @@ public class AuthController {
     public ResponseEntity<Void> resendCode(@Valid @RequestBody ResendCodeRequest request) {
         userService.resendCode(request.email());
         return ResponseEntity.noContent().build();
+    }
+
+    private ResponseCookie authCookie(String token) {
+        return ResponseCookie.from("jwt", token)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
     }
 }

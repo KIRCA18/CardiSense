@@ -33,6 +33,11 @@ public class MlModel {
     @Column(nullable = false)
     private String inputAdapter;
 
+    @Column(length = 1000)
+    private String description;
+
+    private String device;
+
     @Column(nullable = false)
     private boolean active = true;
 
