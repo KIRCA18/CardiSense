@@ -5,14 +5,20 @@ import mk.ukim.finki.backend.domain.model.ParsedEcgRecord;
 import mk.ukim.finki.backend.domain.model.PreparedEcgUpload;
 import mk.ukim.finki.backend.service.interfaces.EcgFormatAdapter;
 import org.dcm4che3.data.Attributes;
-import org.dcm4che3.data.Tag;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class DicomFormatAdapter implements EcgFormatAdapter {
+
+    private static final Pattern STORED_DICOM_FILENAME = Pattern.compile(
+            "^dicom-([0-9]+(?:\\.[0-9]+)*)\\.dcm$",
+            Pattern.CASE_INSENSITIVE
+    );
 
     private final DicomAnonymizationService anonymizationService;
     private final DicomFileService dicomFileService;
@@ -47,17 +53,22 @@ public class DicomFormatAdapter implements EcgFormatAdapter {
         Attributes anonymizedDataset =
                 dicomFileService.read(anonymizedContent);
 
-        ParsedEcgRecord record =
+        ParsedEcgRecord parsedRecord =
                 waveformParser.parse(anonymizedDataset);
 
-        String anonymizedSopInstanceUid =
-                anonymizedDataset.getString(
-                        Tag.SOPInstanceUID
-                );
+        String recordName = resolveRecordName(
+                filename,
+                parsedRecord.recordName()
+        );
+
+        ParsedEcgRecord record = new ParsedEcgRecord(
+                recordName,
+                parsedRecord.ecg()
+        );
 
         String safeFilename =
                 "dicom-" +
-                        anonymizedSopInstanceUid +
+                        recordName +
                         ".dcm";
 
         return new PreparedEcgUpload(
@@ -66,5 +77,20 @@ public class DicomFormatAdapter implements EcgFormatAdapter {
                 anonymizedContent,
                 List.of(record)
         );
+    }
+
+    private String resolveRecordName(
+            String filename,
+            String anonymizedSopInstanceUid
+    ) {
+        String normalized = filename.replace('\\', '/');
+        String fileName = normalized.substring(normalized.lastIndexOf('/') + 1);
+        Matcher matcher = STORED_DICOM_FILENAME.matcher(fileName);
+
+        if (matcher.matches()) {
+            return matcher.group(1);
+        }
+
+        return anonymizedSopInstanceUid;
     }
 }
