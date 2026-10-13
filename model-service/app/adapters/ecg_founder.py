@@ -28,6 +28,7 @@ class EcgFounderAdapter(ModelAdapter):
         self.model = None
         self.labels: list[str] = []
         self.load_error = None
+        self.excluded_labels=['otherwise normal ecg']
 
     @property
     def ready(self) -> bool:
@@ -128,7 +129,7 @@ class EcgFounderAdapter(ModelAdapter):
     
         scores = window_scores.mean(axis=0)
         predictions = [Prediction(label=label, score=float(score), aggregation="mean")
-                       for label, score in zip(self.labels, scores)]
+                       for label, score in zip(self.labels, scores) if label.lower() not in self.excluded_labels]
         predictions.sort(key=lambda prediction: prediction.score, reverse=True)
         warnings = [
             "Scores are experimental model outputs, not clinical diagnoses.",
