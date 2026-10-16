@@ -1,0 +1,7 @@
+.venv/
+venv/
+ckpts/
+vendor/
+__pycache__/
+*.py[cod]
+requirements-base.txt
